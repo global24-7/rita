@@ -61,6 +61,9 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+        <p style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.6, textAlign: 'center' }}>
+          Default: admin@ritajeans.com / changeme123
+        </p>
       </div>
     </div>
   );
