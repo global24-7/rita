@@ -84,8 +84,7 @@ const AuthPage = () => {
       <div className="auth-card">
         <h2 className="auth-card-logo">RITA JEANS</h2>
 
-        <div className="auth-card-inner">
-          {/* Sign In */}
+        {mode === 'signin' ? (
           <div className="auth-card-section">
             <p className="auth-card-welcome">Welcome Back!</p>
             <h3 className="auth-card-title">Sign In to RITA JEANS</h3>
@@ -144,15 +143,12 @@ const AuthPage = () => {
 
             <p className="auth-switch">
               Don't have an account?{' '}
-              <button type="button" onClick={() => setMode('signup')}>
+              <button type="button" onClick={() => { setMode('signup'); setShowPassword(false); }}>
                 Sign Up
               </button>
             </p>
           </div>
-
-          <div className="auth-card-divider" />
-
-          {/* Sign Up */}
+        ) : (
           <div className="auth-card-section">
             <p className="auth-card-welcome">Sign Up</p>
             <h3 className="auth-card-title">Create an Account</h3>
@@ -192,6 +188,14 @@ const AuthPage = () => {
                   required
                 />
                 <label htmlFor="signup-password">Password</label>
+                <button
+                  type="button"
+                  className="floating-input-eye"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
 
               <div className="floating-input">
@@ -231,12 +235,12 @@ const AuthPage = () => {
 
             <p className="auth-switch">
               Already have an account?{' '}
-              <button type="button" onClick={() => setMode('signin')}>
+              <button type="button" onClick={() => { setMode('signin'); setShowPassword(false); setShowConfirmPassword(false); }}>
                 Sign In
               </button>
             </p>
           </div>
-        </div>
+        )}
       </div>
 
       <footer className="auth-page-footer">
