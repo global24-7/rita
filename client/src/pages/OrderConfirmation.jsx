@@ -1,11 +1,37 @@
+import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { FaWhatsapp } from 'react-icons/fa';
-import { FiPhone, FiCheckCircle, FiShoppingBag, FiArrowRight } from 'react-icons/fi';
+import { FiPhone, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
+import { getImageUrl, formatPrice } from '../utils/helpers';
 
 const OrderConfirmation = () => {
   const { state } = useLocation();
   const order = state?.order;
   const whatsappLink = state?.whatsappLink;
+  const [productImages, setProductImages] = useState({});
+
+  useEffect(() => {
+    if (order?.items) {
+      order.items.forEach(async (item) => {
+        if (item.productId && !productImages[item.productId]) {
+          try {
+            const res = await fetch(
+              `${import.meta.env.VITE_API_URL || ''}/api/products/${item.productId}`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              setProductImages((prev) => ({
+                ...prev,
+                [item.productId]: data.images?.[0] || null,
+              }));
+            }
+          } catch (err) {
+            console.error('Failed to fetch product image');
+          }
+        }
+      });
+    }
+  }, [order]);
 
   if (!order) {
     return (
@@ -42,11 +68,25 @@ const OrderConfirmation = () => {
 
           <div className="confirmation-details">
             <h3>Order Details</h3>
-            <div className="cart-summary-rows">
+            <div className="confirmation-items">
               {order.items?.map((item, idx) => (
-                <div key={idx} className="cart-summary-row">
-                  <span>{item.name} (Size: {item.size}) &times; {item.qty}</span>
-                  <span>GH&cent;{(item.priceAtOrder * item.qty).toFixed(2)}</span>
+                <div key={idx} className="confirmation-item">
+                  {productImages[item.productId] && (
+                    <img
+                      src={getImageUrl(productImages[item.productId])}
+                      alt={item.name}
+                      className="confirmation-item-img"
+                    />
+                  )}
+                  <div className="confirmation-item-info">
+                    <span className="confirmation-item-name">{item.name}</span>
+                    <span className="confirmation-item-meta">
+                      Size: {item.size} &middot; Qty: {item.qty}
+                    </span>
+                  </div>
+                  <span className="confirmation-item-price">
+                    {formatPrice(item.priceAtOrder * item.qty)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -54,12 +94,12 @@ const OrderConfirmation = () => {
             <div className="cart-summary-row">
               <span>Delivery ({order.deliveryLocation})</span>
               <span className={order.deliveryFee === 0 ? 'text-success' : ''}>
-                {order.deliveryFee === 0 ? 'FREE' : `GH\u20B5${order.deliveryFee.toFixed(2)}`}
+                {order.deliveryFee === 0 ? 'FREE' : formatPrice(order.deliveryFee)}
               </span>
             </div>
             <div className="cart-summary-row cart-summary-total">
               <span>Total</span>
-              <span>GH&cent;{order.total.toFixed(2)}</span>
+              <span>{formatPrice(order.total)}</span>
             </div>
           </div>
 

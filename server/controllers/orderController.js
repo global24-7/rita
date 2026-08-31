@@ -18,9 +18,24 @@ exports.createOrder = async (req, res, next) => {
 
     await order.save();
 
-    // Generate WhatsApp message
-    const itemList = order.items
-      .map((item) => `• ${item.name} (Size: ${item.size}) x${item.qty} — GH₵${item.priceAtOrder * item.qty}`)
+    // Populate items with product images
+    const Product = require('../models/Product');
+    const itemsWithImages = await Promise.all(
+      order.items.map(async (item) => {
+        const product = await Product.findById(item.productId).select('images');
+        return {
+          ...item.toObject(),
+          images: product?.images || [],
+        };
+      })
+    );
+
+    // Generate WhatsApp message with image links
+    const itemList = itemsWithImages
+      .map((item) => {
+        const imgLink = item.images[0] ? `\n   📸 ${process.env.CLIENT_URL?.replace(/\/$/, '') || 'https://rita-jeans.netlify.app'}${item.images[0]}` : '';
+        return `• ${item.name} (Size: ${item.size}) x${item.qty} — GH₵${item.priceAtOrder * item.qty}${imgLink}`;
+      })
       .join('\n');
 
     const whatsappMessage = encodeURIComponent(
