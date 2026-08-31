@@ -32,11 +32,11 @@ const Login = () => {
   return (
     <div className="admin-login" id="admin-login">
       <div className="admin-login-card">
-        <h1 style={{ color: 'var(--color-accent)' }}>Rita Jeans</h1>
-        <p className="subtitle">Admin Dashboard</p>
+        <h1 className="admin-login-logo">Rita Jeans</h1>
+        <p className="admin-login-subtitle">Admin Dashboard</p>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label className="form-label" htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
@@ -47,7 +47,7 @@ const Login = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label className="form-label" htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
@@ -57,11 +57,11 @@ const Login = () => {
               placeholder="Enter password"
             />
           </div>
-          <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
+          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-        <p style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.6, textAlign: 'center' }}>
+        <p className="admin-login-hint">
           Default: admin@ritajeans.com / changeme123
         </p>
       </div>

@@ -12,7 +12,7 @@ const StarRating = ({ rating = 0, size = '0.9rem' }) => {
       )
     );
   }
-  return <div className="stars">{stars}</div>;
+  return <div className="star-rating">{stars}</div>;
 };
 
 export default StarRating;

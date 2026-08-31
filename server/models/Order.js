@@ -61,6 +61,11 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
+    default: null,
+  },
 }, {
   timestamps: true,
 });

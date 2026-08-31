@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiMapPin, FiPhone, FiArrowRight, FiZap } from 'react-icons/fi';
+import { FiMapPin, FiPhone, FiArrowRight } from 'react-icons/fi';
 import { getProducts } from '../api';
 import ProductCard from '../components/product/ProductCard';
 import FlashSaleTimer from '../components/product/FlashSaleTimer';
 import { setReferralFromUrl } from '../utils/helpers';
 
 const categories = [
-  { name: 'Skinny', icon: '👖', desc: 'Slim & sleek' },
-  { name: 'Straight', icon: '🧵', desc: 'Classic cut' },
-  { name: 'Ripped', icon: '✂️', desc: 'Edgy style' },
-  { name: 'Mom Fit', icon: '👗', desc: 'High-waisted' },
-  { name: 'Baggy', icon: '🎒', desc: 'Relaxed fit' },
-  { name: 'Wide Leg', icon: '🦿', desc: 'Flowing width' },
+  { name: 'Skinny', desc: 'Slim & sleek' },
+  { name: 'Straight', desc: 'Classic cut' },
+  { name: 'Ripped', desc: 'Edgy style' },
+  { name: 'Mom Fit', desc: 'High-waisted' },
+  { name: 'Baggy', desc: 'Relaxed fit' },
+  { name: 'Wide Leg', desc: 'Flowing width' },
 ];
 
 const Home = () => {
@@ -40,7 +40,6 @@ const Home = () => {
     }
   };
 
-  // Find the latest flash sale end date for the countdown
   const latestSaleEnd = flashSales.reduce((latest, p) => {
     if (p.saleEndsAt && new Date(p.saleEndsAt) > new Date(latest || 0)) {
       return p.saleEndsAt;
@@ -49,104 +48,74 @@ const Home = () => {
   }, null);
 
   return (
-    <div id="home-page">
-      {/* Location Bar */}
-      <div className="location-bar">
-        <div className="container">
-          <div className="location-item">
-            <FiMapPin className="icon" />
-            <span>La Paz, Accra</span>
-          </div>
-          <div className="location-item">
-            <FiMapPin className="icon" />
-            <span>Ablekuma, Accra</span>
-          </div>
-          <div className="location-item">
-            <FiPhone className="icon" />
-            <a href="tel:059217747" style={{ color: 'inherit' }}>059 217 7477</a>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Banner */}
-      <section className="hero" id="hero">
-        <div className="hero-content">
-          <div className="hero-badge">✦ Premium Denim Since Day One</div>
-          <h1>
-            Wear Your <span className="highlight">Confidence</span>
-          </h1>
-          <p>
-            Discover Rita Jeans — Ghana's favourite denim destination.
-            From skinny to baggy, ripped to mom fit, find your perfect pair
-            at unbeatable prices.
-          </p>
-          <div className="hero-buttons">
-            <Link to="/catalog" className="btn btn-primary btn-lg">
-              Shop Now <FiArrowRight />
-            </Link>
-            <Link to="/catalog?flashSale=true" className="btn btn-secondary btn-lg">
-              <FiZap /> Flash Sales
-            </Link>
-          </div>
-          <div className="hero-locations">
-            <div className="hero-location">
-              <FiMapPin className="icon" />
-              <span>La Paz</span>
-            </div>
-            <div className="hero-location">
-              <FiMapPin className="icon" />
-              <span>Ablekuma</span>
-            </div>
-            <div className="hero-location">
-              <span>Free delivery in Ablekuma!</span>
+    <div className="home-page" id="home-page">
+      {/* Hero */}
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-content">
+            <span className="hero-badge">Premium Denim Since Day One</span>
+            <h1 className="hero-title">
+              Premium Denim,<br />Crafted for Accra
+            </h1>
+            <p className="hero-subtitle">
+              From skinny to baggy, ripped to mom fit — discover your perfect pair
+              at Ghana's favourite denim destination.
+            </p>
+            <div className="hero-buttons">
+              <Link to="/catalog" className="btn btn-primary btn-lg">
+                Shop Now <FiArrowRight size={18} />
+              </Link>
+              <Link to="/catalog?flashSale=true" className="btn btn-outline btn-lg">
+                View Sale
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* Categories */}
-      <section className="section" id="categories">
+      <section className="section categories-section">
         <div className="container">
-          <h2 className="section-title">
-            Shop by <span>Category</span>
-          </h2>
-          <div className="categories-grid">
-            {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                to={`/catalog?category=${encodeURIComponent(cat.name)}`}
-                className="category-card"
-              >
-                <div className="category-icon">{cat.icon}</div>
-                <h3>{cat.name}</h3>
-                <p>{cat.desc}</p>
-              </Link>
-            ))}
+          <div className="section-header">
+            <h2 className="section-title">Shop by Category</h2>
+          </div>
+          <div className="categories-scroll">
+            <div className="categories-grid">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.name}
+                  to={`/catalog?category=${encodeURIComponent(cat.name)}`}
+                  className="category-card"
+                >
+                  <div className="category-card-inner">
+                    <h3 className="category-name">{cat.name}</h3>
+                    <p className="category-desc">{cat.desc}</p>
+                    <span className="category-link">Shop Now <FiArrowRight size={14} /></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Flash Sales */}
       {flashSales.length > 0 && (
-        <section className="section" id="flash-sales">
+        <section className="section flash-sale-section">
           <div className="container">
-            <div className="flash-sale-section">
-              <div className="flash-sale-header">
-                <h2 className="section-title" style={{ marginBottom: 0 }}>
-                  <FiZap /> Flash <span>Sales</span>
-                </h2>
+            <div className="section-header">
+              <div className="section-header-left">
+                <h2 className="section-title">Flash Sales</h2>
                 {latestSaleEnd && <FlashSaleTimer endDate={latestSaleEnd} />}
               </div>
-              <div className="product-grid">
-                {flashSales.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
-              <div style={{ textAlign: 'center', marginTop: 'var(--space-xl)' }}>
-                <Link to="/catalog?flashSale=true" className="btn btn-secondary">
-                  View All Sales <FiArrowRight />
-                </Link>
-              </div>
+              <Link to="/catalog?flashSale=true" className="section-link">
+                View All <FiArrowRight size={16} />
+              </Link>
+            </div>
+            <div className="product-grid product-grid-4">
+              {flashSales.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
             </div>
           </div>
         </section>
@@ -154,46 +123,56 @@ const Home = () => {
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
-        <section className="section" id="new-arrivals">
+        <section className="section arrivals-section">
           <div className="container">
-            <h2 className="section-title">
-              New <span>Arrivals</span>
-            </h2>
-            <div className="product-grid">
+            <div className="section-header">
+              <h2 className="section-title">New Arrivals</h2>
+              <Link to="/catalog?newArrival=true" className="section-link">
+                View All <FiArrowRight size={16} />
+              </Link>
+            </div>
+            <div className="product-grid product-grid-4">
               {newArrivals.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
-            </div>
-            <div style={{ textAlign: 'center', marginTop: 'var(--space-xl)' }}>
-              <Link to="/catalog?newArrival=true" className="btn btn-secondary">
-                View All New Arrivals <FiArrowRight />
-              </Link>
             </div>
           </div>
         </section>
       )}
 
-      {/* Call to Action */}
-      <section className="section" id="cta">
-        <div className="container" style={{ textAlign: 'center' }}>
-          <h2 className="section-title">
-            Can't find what you <span>need?</span>
-          </h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)', maxWidth: '500px', margin: '0 auto var(--space-xl)' }}>
-            Call or WhatsApp us directly. We'll help you find the perfect pair of jeans!
-          </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="tel:059217747" className="btn btn-primary btn-lg">
-              <FiPhone /> Call Now
-            </a>
-            <a
-              href="https://wa.me/23359217747?text=Hi%20Rita!%20I'd%20like%20to%20place%20an%20order."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary btn-lg"
-            >
-              WhatsApp Us
-            </a>
+      {/* CTA Section */}
+      <section className="section cta-section">
+        <div className="container">
+          <div className="cta-card">
+            <div className="cta-content">
+              <h2 className="cta-title">Visit Us in Accra</h2>
+              <p className="cta-text">
+                Come try on your perfect pair. We're in La Paz and Ablekuma — free delivery in Ablekuma.
+              </p>
+              <div className="cta-locations">
+                <div className="cta-location">
+                  <FiMapPin size={16} />
+                  <span>La Paz, Accra</span>
+                </div>
+                <div className="cta-location">
+                  <FiMapPin size={16} />
+                  <span>Ablekuma, Accra</span>
+                </div>
+              </div>
+              <div className="cta-actions">
+                <a href="tel:059217747" className="btn btn-primary">
+                  <FiPhone size={16} /> Call Now
+                </a>
+                <a
+                  href="https://wa.me/23359217747?text=Hi%20Rita!%20I'd%20like%20to%20place%20an%20order."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                >
+                  WhatsApp Us
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>

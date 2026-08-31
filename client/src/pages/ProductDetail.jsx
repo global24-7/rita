@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiHeart, FiShoppingBag, FiShare2, FiArrowLeft } from 'react-icons/fi';
+import { FiHeart, FiShoppingBag, FiShare2, FiArrowLeft, FiMinus, FiPlus } from 'react-icons/fi';
 import { FaHeart, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { getProduct, getProductReviews, submitReview } from '../api';
@@ -22,7 +22,6 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  // Review form state
   const [reviewName, setReviewName] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
@@ -87,6 +86,7 @@ const ProductDetail = () => {
       setReviewName('');
       setReviewRating(0);
       setReviewComment('');
+      fetchReviews();
     } catch (error) {
       toast.error('Failed to submit review');
     } finally {
@@ -104,7 +104,7 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
+      <div className="container" style={{ padding: '6rem 0', textAlign: 'center' }}>
         <h2>Product not found</h2>
         <Link to="/catalog" className="btn btn-primary" style={{ marginTop: '1rem' }}>
           Back to Shop
@@ -121,8 +121,8 @@ const ProductDetail = () => {
   return (
     <div className="product-detail" id="product-detail">
       <div className="container">
-        <Link to="/catalog" className="btn btn-ghost btn-sm" style={{ marginBottom: 'var(--space-lg)' }}>
-          <FiArrowLeft /> Back to Shop
+        <Link to="/catalog" className="back-link">
+          <FiArrowLeft size={18} /> Back to Shop
         </Link>
 
         <div className="product-detail-grid">
@@ -135,19 +135,19 @@ const ProductDetail = () => {
                   alt={product.name}
                 />
               ) : (
-                <div className="product-placeholder" style={{ height: '100%' }}>👖</div>
+                <div className="product-gallery-placeholder">No Image</div>
               )}
             </div>
             {product.images && product.images.length > 1 && (
               <div className="product-gallery-thumbs">
                 {product.images.map((img, idx) => (
-                  <div
+                  <button
                     key={idx}
-                    className={`product-gallery-thumb ${idx === selectedImage ? 'active' : ''}`}
+                    className={`product-thumb ${idx === selectedImage ? 'active' : ''}`}
                     onClick={() => setSelectedImage(idx)}
                   >
                     <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} />
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -155,63 +155,46 @@ const ProductDetail = () => {
 
           {/* Product Info */}
           <div className="product-info">
-            <div>
-              <span className="product-card-category">{product.category}</span>
-              <h1>{product.name}</h1>
-            </div>
+            <span className="product-info-category">{product.category}</span>
+            <h1 className="product-info-name">{product.name}</h1>
 
-            {/* Rating */}
             {product.reviewCount > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <StarRating rating={product.averageRating} />
-                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                  ({product.reviewCount} review{product.reviewCount !== 1 ? 's' : ''})
-                </span>
+              <div className="product-info-rating">
+                <StarRating rating={product.averageRating} size="0.9rem" />
+                <span>({product.reviewCount} review{product.reviewCount !== 1 ? 's' : ''})</span>
               </div>
             )}
 
-            {/* Price */}
-            <div className="price-display">
-              <span className="price-current" style={{ fontSize: '2rem' }}>
-                {formatPrice(discountedPrice)}
-              </span>
+            <div className="product-info-price">
+              <span className="product-price-current">{formatPrice(discountedPrice)}</span>
               {hasDiscount && (
                 <>
-                  <span className="price-original" style={{ fontSize: '1.2rem' }}>
-                    {formatPrice(product.price)}
-                  </span>
-                  <span className="price-discount">-{product.discountPercent}% OFF</span>
+                  <span className="product-price-original">{formatPrice(product.price)}</span>
+                  <span className="product-price-discount">-{product.discountPercent}% OFF</span>
                 </>
               )}
             </div>
 
-            {/* Flash Sale Timer */}
             {isOnSale && (
-              <div>
-                <p style={{ fontSize: '0.85rem', color: '#ff4444', fontWeight: 600, marginBottom: '0.5rem' }}>
-                  ⚡ Sale ends in:
-                </p>
+              <div className="product-sale-timer">
+                <span className="product-sale-label">Sale ends in:</span>
                 <FlashSaleTimer endDate={product.saleEndsAt} />
               </div>
             )}
 
-            {/* Description */}
-            <p className="product-description">{product.description}</p>
+            <p className="product-info-description">{product.description}</p>
 
-            {/* Stock */}
-            <div>
+            <div className="product-info-stock">
               {product.stock > 0 ? (
-                <span className="badge badge-stock">✓ In Stock ({product.stock} left)</span>
+                <span className="stock-in">In Stock ({product.stock} left)</span>
               ) : (
-                <span className="badge badge-out">✗ Out of Stock</span>
+                <span className="stock-out">Out of Stock</span>
               )}
             </div>
 
             {/* Size Selector */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 500, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Select Size
-              </label>
+            <div className="product-option">
+              <label className="product-option-label">Size</label>
               <div className="size-selector">
                 {product.sizes?.map((size) => (
                   <button
@@ -226,63 +209,67 @@ const ProductDetail = () => {
             </div>
 
             {/* Quantity */}
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 500, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Quantity
-              </label>
-              <div className="quantity-control">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
-                <span>{quantity}</span>
-                <button onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}>+</button>
+            <div className="product-option">
+              <label className="product-option-label">Quantity</label>
+              <div className="quantity-stepper">
+                <button
+                  className="quantity-btn"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <FiMinus size={16} />
+                </button>
+                <span className="quantity-value">{quantity}</span>
+                <button
+                  className="quantity-btn"
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  disabled={quantity >= product.stock}
+                >
+                  <FiPlus size={16} />
+                </button>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="product-actions-row">
+            <div className="product-actions">
               <button
-                className="btn btn-primary btn-lg"
+                className="btn btn-primary btn-lg product-add-btn"
                 onClick={handleAddToCart}
                 disabled={product.stock <= 0}
-                style={{ flex: 1 }}
               >
-                <FiShoppingBag /> Add to Cart
+                <FiShoppingBag size={18} /> Add to Cart
               </button>
               <button
-                className={`btn ${wishlisted ? 'btn-primary' : 'btn-secondary'}`}
+                className={`product-action-btn ${wishlisted ? 'active' : ''}`}
                 onClick={() => toggleWishlist(product)}
-                style={{ padding: '1rem' }}
+                aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                {wishlisted ? <FaHeart /> : <FiHeart />}
+                {wishlisted ? <FaHeart size={18} /> : <FiHeart size={18} />}
               </button>
               <button
-                className="btn btn-ghost"
+                className="product-action-btn"
                 onClick={() => shareProduct(product)}
-                style={{ padding: '1rem' }}
+                aria-label="Share"
               >
-                <FiShare2 />
+                <FiShare2 size={18} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Reviews Section */}
+        {/* Reviews */}
         <div className="reviews-section" id="reviews">
-          <h2 className="section-title" style={{ textAlign: 'left' }}>
-            Customer <span>Reviews</span>
-          </h2>
+          <h2 className="section-title">Customer Reviews</h2>
 
-          {/* Review List */}
           {reviews.length > 0 ? (
             <div className="review-list">
               {reviews.map((review) => (
-                <div key={review._id} className="review-item">
-                  <div className="review-header">
-                    <div>
-                      <span className="review-author">{review.customerName}</span>
+                <div key={review._id} className="review-card">
+                  <div className="review-card-header">
+                    <div className="review-card-author">
+                      <span className="review-name">{review.customerName}</span>
                       {review.isVerifiedPurchase && (
-                        <span className="badge badge-stock" style={{ marginLeft: '0.5rem', fontSize: '0.6rem' }}>
-                          Verified Purchase
-                        </span>
+                        <span className="review-verified">Verified Purchase</span>
                       )}
                     </div>
                     <span className="review-date">
@@ -295,26 +282,26 @@ const ProductDetail = () => {
               ))}
             </div>
           ) : (
-            <p style={{ color: 'var(--color-text-muted)' }}>No reviews yet. Be the first!</p>
+            <p className="reviews-empty">No reviews yet. Be the first to review this product!</p>
           )}
 
           {/* Review Form */}
           <form className="review-form" onSubmit={handleSubmitReview}>
-            <h3>Write a Review</h3>
-            <div className="star-input">
+            <h3 className="review-form-title">Write a Review</h3>
+            <div className="review-star-input">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
-                  className={star <= reviewRating ? 'active' : ''}
+                  className={`review-star ${star <= reviewRating ? 'active' : ''}`}
                   onClick={() => setReviewRating(star)}
                 >
-                  <FaStar />
+                  <FaStar size={20} />
                 </button>
               ))}
             </div>
             <div className="form-group">
-              <label>Your Name</label>
+              <label className="form-label">Your Name</label>
               <input
                 type="text"
                 className="form-input"
@@ -325,7 +312,7 @@ const ProductDetail = () => {
               />
             </div>
             <div className="form-group">
-              <label>Comment (Optional)</label>
+              <label className="form-label">Comment (Optional)</label>
               <textarea
                 className="form-input"
                 rows="3"

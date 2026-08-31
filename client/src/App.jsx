@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider } from './context/AuthContext';
+import { CustomerProvider } from './context/CustomerContext';
 
 // Layout
 import Navbar from './components/layout/Navbar';
@@ -21,6 +22,9 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Wishlist from './pages/Wishlist';
+import Account from './pages/Account';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Admin Pages
 import Login from './pages/admin/Login';
@@ -38,9 +42,10 @@ import './styles/admin.css';
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <Router>
+      <CustomerProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Router>
             <Toaster
               position="top-center"
               toastOptions={{
@@ -134,6 +139,19 @@ function App() {
                   </>
                 }
               />
+              <Route
+                path="/account"
+                element={
+                  <>
+                    <Navbar />
+                    <Account />
+                    <Footer />
+                    <FloatingButtons />
+                  </>
+                }
+              />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<Login />} />
@@ -154,8 +172,9 @@ function App() {
               </Route>
             </Routes>
           </Router>
-        </WishlistProvider>
-      </CartProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </CustomerProvider>
     </AuthProvider>
   );
 }

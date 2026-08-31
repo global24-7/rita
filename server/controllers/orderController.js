@@ -13,6 +13,7 @@ exports.createOrder = async (req, res, next) => {
       deliveryAddress,
       items,
       referralCode: referralCode || null,
+      customer: req.customer ? req.customer._id : null,
     });
 
     await order.save();
@@ -155,6 +156,29 @@ exports.getAnalytics = async (req, res, next) => {
       bestSellers,
       referralOrders,
       recentOrders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get logged-in customer's orders
+// @route   GET /api/orders/my
+exports.getMyOrders = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const total = await Order.countDocuments({ customer: req.customer._id });
+    const orders = await Order.find({ customer: req.customer._id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    res.json({
+      orders,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit)),
+      total,
     });
   } catch (error) {
     next(error);

@@ -1,21 +1,25 @@
 import { Link } from 'react-router-dom';
-import { FiHeart, FiShoppingBag } from 'react-icons/fi';
+import { FiHeart, FiArrowRight } from 'react-icons/fi';
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 import { getImageUrl, formatPrice, calculateDiscount } from '../utils/helpers';
 
 const Wishlist = () => {
   const { wishlistItems, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
   if (wishlistItems.length === 0) {
     return (
       <div className="wishlist-page">
         <div className="container">
           <div className="empty-state">
-            <div className="icon"><FiHeart /></div>
+            <div className="empty-state-icon">
+              <FiHeart size={48} strokeWidth={1} />
+            </div>
             <h3>Your wishlist is empty</h3>
-            <p>Save your favourite jeans for later!</p>
+            <p>Save your favourite jeans for later.</p>
             <Link to="/catalog" className="btn btn-primary">
-              <FiShoppingBag /> Browse Jeans
+              Browse Jeans <FiArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -26,45 +30,44 @@ const Wishlist = () => {
   return (
     <div className="wishlist-page" id="wishlist-page">
       <div className="container">
-        <h1>My Wishlist ({wishlistItems.length})</h1>
-        <div className="product-grid">
+        <h1 className="page-title">My Wishlist ({wishlistItems.length})</h1>
+        <div className="product-grid product-grid-3">
           {wishlistItems.map((item) => {
             const discountedPrice = calculateDiscount(item.price, item.discountPercent);
             const hasDiscount = item.discountPercent > 0;
             return (
               <div key={item._id} className="product-card">
-                <div className="product-card-image">
-                  {item.image ? (
-                    <Link to={`/product/${item._id}`}>
-                      <img src={getImageUrl(item.image)} alt={item.name} loading="lazy" />
-                    </Link>
-                  ) : (
-                    <Link to={`/product/${item._id}`}>
-                      <div className="product-placeholder">👖</div>
-                    </Link>
-                  )}
-                </div>
-                <div className="product-card-body">
-                  <span className="product-card-category">{item.category}</span>
-                  <h3 className="product-card-name">
-                    <Link to={`/product/${item._id}`}>{item.name}</Link>
-                  </h3>
-                  <div className="product-card-footer">
-                    <div className="price-display">
-                      <span className="price-current">{formatPrice(discountedPrice)}</span>
-                      {hasDiscount && (
-                        <span className="price-original">{formatPrice(item.price)}</span>
-                      )}
-                    </div>
+                <Link to={`/product/${item._id}`} className="product-card-link">
+                  <div className="product-card-image">
+                    {item.image ? (
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={item.name}
+                        loading="lazy"
+                        className="product-card-img"
+                      />
+                    ) : (
+                      <div className="product-card-placeholder">No Image</div>
+                    )}
                     <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => removeFromWishlist(item._id)}
-                      style={{ color: 'var(--color-danger)' }}
+                      className="product-card-wishlist active"
+                      onClick={(e) => { e.preventDefault(); removeFromWishlist(item._id); }}
+                      aria-label="Remove from wishlist"
                     >
-                      Remove
+                      <FiHeart size={18} />
                     </button>
                   </div>
-                </div>
+                  <div className="product-card-body">
+                    <span className="product-card-category">{item.category}</span>
+                    <h3 className="product-card-name">{item.name}</h3>
+                    <div className="product-card-pricing">
+                      <span className="product-card-price">{formatPrice(discountedPrice)}</span>
+                      {hasDiscount && (
+                        <span className="product-card-price-original">{formatPrice(item.price)}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
               </div>
             );
           })}

@@ -62,6 +62,16 @@ export const getWishlist = (id) => api.get(`/customers/${id}/wishlist`);
 export const updateWishlist = (id, productId, action) =>
   api.put(`/customers/${id}/wishlist`, { productId, action });
 
+// === Customer Auth ===
+export const registerCustomer = (data) => api.post('/customers/register', data);
+export const loginCustomer = (data) => api.post('/customers/login', data);
+export const logoutCustomer = () => api.post('/customers/logout');
+export const getCustomerProfile = () => api.get('/customers/me');
+export const updateCustomerProfile = (data) => api.put('/customers/me', data);
+export const forgotPassword = (data) => api.post('/customers/forgot-password', data);
+export const resetPassword = (data) => api.put('/customers/reset-password', data);
+export const getMyOrders = () => api.get('/orders/my');
+
 // === Admin ===
 export const adminLogin = (credentials) => api.post('/admin/login', credentials);
 export const getAdminProfile = () => api.get('/admin/me');

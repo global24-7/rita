@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { FiArrowRight, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { createOrder, getSettings } from '../api';
 import { formatPrice, getReferralCode } from '../utils/helpers';
@@ -100,7 +101,9 @@ const Checkout = () => {
       <div className="checkout-page">
         <div className="container">
           <div className="empty-state">
-            <div className="icon">🛒</div>
+            <div className="empty-state-icon">
+              <FiShoppingBag size={48} strokeWidth={1} />
+            </div>
             <h3>Your cart is empty</h3>
             <p>Add some products before checking out.</p>
             <Link to="/catalog" className="btn btn-primary">Shop Now</Link>
@@ -113,15 +116,14 @@ const Checkout = () => {
   return (
     <div className="checkout-page" id="checkout-page">
       <div className="container">
-        <h1 style={{ marginBottom: 'var(--space-xl)' }}>Checkout</h1>
+        <h1 className="page-title">Checkout</h1>
 
         <div className="checkout-layout">
-          {/* Checkout Form */}
           <form className="checkout-form" onSubmit={handleSubmit}>
-            <h2>Delivery Details</h2>
+            <h2 className="checkout-form-title">Delivery Details</h2>
 
             <div className="form-group">
-              <label htmlFor="customerName">Full Name *</label>
+              <label className="form-label" htmlFor="customerName">Full Name</label>
               <input
                 type="text"
                 id="customerName"
@@ -131,11 +133,11 @@ const Checkout = () => {
                 onChange={handleChange}
                 placeholder="Enter your full name"
               />
-              {errors.customerName && <p className="form-error">{errors.customerName}</p>}
+              {errors.customerName && <span className="form-error">{errors.customerName}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone">Phone Number *</label>
+              <label className="form-label" htmlFor="phone">Phone Number</label>
               <input
                 type="tel"
                 id="phone"
@@ -145,27 +147,34 @@ const Checkout = () => {
                 onChange={handleChange}
                 placeholder="e.g. 059217747"
               />
-              {errors.phone && <p className="form-error">{errors.phone}</p>}
+              {errors.phone && <span className="form-error">{errors.phone}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="deliveryLocation">Delivery Location *</label>
-              <select
-                id="deliveryLocation"
-                name="deliveryLocation"
-                className="form-select"
-                value={form.deliveryLocation}
-                onChange={handleChange}
-              >
-                <option value="Ablekuma">Ablekuma (Free Delivery!)</option>
-                <option value="La Paz">La Paz</option>
-                <option value="Other">Other Location</option>
-              </select>
-              {errors.deliveryLocation && <p className="form-error">{errors.deliveryLocation}</p>}
+              <label className="form-label">Delivery Location</label>
+              <div className="radio-group">
+                {[
+                  { value: 'Ablekuma', label: 'Ablekuma (Free Delivery!)' },
+                  { value: 'La Paz', label: 'La Paz' },
+                  { value: 'Other', label: 'Other Location' },
+                ].map((opt) => (
+                  <label key={opt.value} className={`radio-option ${form.deliveryLocation === opt.value ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="deliveryLocation"
+                      value={opt.value}
+                      checked={form.deliveryLocation === opt.value}
+                      onChange={handleChange}
+                    />
+                    <span className="radio-label">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.deliveryLocation && <span className="form-error">{errors.deliveryLocation}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="deliveryAddress">Delivery Address / Landmark</label>
+              <label className="form-label" htmlFor="deliveryAddress">Delivery Address / Landmark</label>
               <textarea
                 id="deliveryAddress"
                 name="deliveryAddress"
@@ -179,37 +188,40 @@ const Checkout = () => {
 
             <button
               type="submit"
-              className="btn btn-primary btn-block btn-lg"
+              className="btn btn-primary btn-lg btn-block"
               disabled={loading}
             >
-              {loading ? 'Placing Order...' : 'Place Order'}
+              {loading ? 'Placing Order...' : 'Place Order'} {!loading && <FiArrowRight size={16} />}
             </button>
 
-            <p style={{ textAlign: 'center', marginTop: 'var(--space-md)', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+            <p className="checkout-note">
               After placing your order, you'll be directed to confirm via WhatsApp or call.
             </p>
           </form>
 
-          {/* Order Summary */}
           <div className="cart-summary">
-            <h3>Order Summary</h3>
-            {cartItems.map((item) => (
-              <div key={`${item.productId}-${item.size}`} className="cart-summary-row">
-                <span>{item.name} (×{item.qty})</span>
-                <span>{formatPrice(item.price * item.qty)}</span>
-              </div>
-            ))}
+            <h3 className="cart-summary-title">Order Summary</h3>
+            <div className="cart-summary-rows">
+              {cartItems.map((item) => (
+                <div key={`${item.productId}-${item.size}`} className="cart-summary-row">
+                  <span>{item.name} (&times;{item.qty})</span>
+                  <span>{formatPrice(item.price * item.qty)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="cart-summary-divider" />
             <div className="cart-summary-row">
               <span>Subtotal</span>
               <span>{formatPrice(cartTotal)}</span>
             </div>
             <div className="cart-summary-row">
               <span>Delivery Fee</span>
-              <span style={{ color: currentDeliveryFee === 0 ? 'var(--color-success)' : 'inherit' }}>
+              <span className={currentDeliveryFee === 0 ? 'text-success' : ''}>
                 {currentDeliveryFee === 0 ? 'FREE' : formatPrice(currentDeliveryFee)}
               </span>
             </div>
-            <div className="cart-summary-row total">
+            <div className="cart-summary-divider" />
+            <div className="cart-summary-row cart-summary-total">
               <span>Total</span>
               <span>{formatPrice(total)}</span>
             </div>

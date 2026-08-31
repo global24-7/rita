@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiSliders } from 'react-icons/fi';
 import { getProducts } from '../api';
 import ProductCard from '../components/product/ProductCard';
 
@@ -18,6 +18,8 @@ const Catalog = () => {
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const filterBarRef = useRef(null);
 
   const currentCategory = searchParams.get('category') || 'All';
   const currentSearch = searchParams.get('search') || '';
@@ -25,6 +27,17 @@ const Catalog = () => {
   const currentPage = Number(searchParams.get('page')) || 1;
   const flashSale = searchParams.get('flashSale');
   const newArrival = searchParams.get('newArrival');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (filterBarRef.current) {
+        const rect = filterBarRef.current.getBoundingClientRect();
+        setStickyVisible(rect.top <= 0);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     fetchProducts();
@@ -61,7 +74,7 @@ const Catalog = () => {
     } else {
       params.delete(key);
     }
-    params.delete('page'); // Reset page on filter change
+    params.delete('page');
     setSearchParams(params);
   };
 
@@ -78,101 +91,109 @@ const Catalog = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const pageTitle = flashSale ? 'Flash Sales 🔥' : newArrival ? 'New Arrivals ✨' : 'All Jeans';
+  const pageTitle = flashSale ? 'Flash Sales' : newArrival ? 'New Arrivals' : 'All Jeans';
 
   return (
     <div className="catalog-page" id="catalog-page">
-      <div className="container">
-        <div className="catalog-header">
-          <h1>{pageTitle}</h1>
-          <form className="search-bar" onSubmit={handleSearch}>
-            <FiSearch className="search-icon" />
-            <input
-              type="text"
-              name="search"
-              placeholder="Search jeans..."
-              defaultValue={currentSearch}
-              className="form-input"
-              style={{ paddingLeft: '2.5rem', borderRadius: 'var(--radius-full)' }}
-            />
-          </form>
+      <div className="catalog-header">
+        <div className="container">
+          <h1 className="catalog-title">{pageTitle}</h1>
         </div>
+      </div>
 
-        {/* Category Filters */}
-        <div className="catalog-filters" style={{ marginBottom: 'var(--space-lg)' }}>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              className={`filter-chip ${currentCategory === cat ? 'active' : ''}`}
-              onClick={() => updateFilter('category', cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Controls */}
-        <div className="catalog-controls">
-          <span className="results-count">{total} products found</span>
-          <select
-            className="form-select"
-            style={{ width: 'auto', minWidth: '180px' }}
-            value={currentSort}
-            onChange={(e) => updateFilter('sort', e.target.value)}
-          >
-            {sortOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Products Grid */}
-        {loading ? (
-          <div className="loader">
-            <div className="spinner"></div>
-          </div>
-        ) : products.length > 0 ? (
-          <>
-            <div className="product-grid">
-              {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="pagination">
-                <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage <= 1}
-                >
-                  ‹
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+      <div ref={filterBarRef}>
+        <div className={`filter-bar ${stickyVisible ? 'filter-bar-sticky' : ''}`}>
+          <div className="container">
+            <div className="filter-bar-inner">
+              <div className="filter-bar-categories">
+                {categories.map((cat) => (
                   <button
-                    key={page}
-                    className={currentPage === page ? 'active' : ''}
-                    onClick={() => goToPage(page)}
+                    key={cat}
+                    className={`filter-pill ${currentCategory === cat ? 'active' : ''}`}
+                    onClick={() => updateFilter('category', cat)}
                   >
-                    {page}
+                    {cat}
                   </button>
                 ))}
-                <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                >
-                  ›
-                </button>
               </div>
-            )}
-          </>
-        ) : (
-          <div className="empty-state">
-            <div className="icon">👖</div>
-            <h3>No products found</h3>
-            <p>Try adjusting your search or filter criteria.</p>
+              <div className="filter-bar-right">
+                <form className="filter-search" onSubmit={handleSearch}>
+                  <FiSearch size={16} />
+                  <input
+                    type="text"
+                    name="search"
+                    placeholder="Search..."
+                    defaultValue={currentSearch}
+                  />
+                </form>
+                <select
+                  className="filter-sort"
+                  value={currentSort}
+                  onChange={(e) => updateFilter('sort', e.target.value)}
+                >
+                  {sortOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <span className="filter-count">{total} products</span>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+      </div>
+
+      <div className="catalog-content">
+        <div className="container">
+          {loading ? (
+            <div className="loader">
+              <div className="spinner"></div>
+            </div>
+          ) : products.length > 0 ? (
+            <>
+              <div className="product-grid product-grid-3">
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                  >
+                    Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => goToPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    className="pagination-btn"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <FiSearch size={48} strokeWidth={1} />
+              </div>
+              <h3>No products found</h3>
+              <p>Try adjusting your search or filter criteria.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
