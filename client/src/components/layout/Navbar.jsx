@@ -4,11 +4,9 @@ import { FiShoppingBag, FiHeart, FiMenu, FiX, FiSearch, FiUser } from 'react-ico
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCustomer } from '../../context/CustomerContext';
-import AuthModal from '../auth/AuthModal';
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
   const { customer, isAuthenticated } = useCustomer();
@@ -40,15 +38,13 @@ const Navbar = () => {
               <FiSearch size={20} />
             </Link>
 
-            {isAuthenticated ? (
-              <Link to="/account" className="navbar-icon" aria-label="Account">
-                <FiUser size={20} />
-              </Link>
-            ) : (
-              <button className="navbar-icon" onClick={() => setAuthOpen(true)} aria-label="Sign in">
-                <FiUser size={20} />
-              </button>
-            )}
+            <Link
+              to={isAuthenticated ? '/account' : '/login'}
+              className="navbar-icon"
+              aria-label="Account"
+            >
+              <FiUser size={20} />
+            </Link>
 
             <Link to="/wishlist" className="navbar-icon" aria-label="Wishlist">
               <FiHeart size={20} />
@@ -89,23 +85,16 @@ const Navbar = () => {
             <NavLink to="/cart" className="mobile-drawer-link" onClick={() => setMobileOpen(false)}>
               Cart {cartCount > 0 && `(${cartCount})`}
             </NavLink>
-            {isAuthenticated ? (
-              <NavLink to="/account" className="mobile-drawer-link" onClick={() => setMobileOpen(false)}>
-                My Account
-              </NavLink>
-            ) : (
-              <button
-                className="mobile-drawer-link mobile-drawer-auth"
-                onClick={() => { setMobileOpen(false); setAuthOpen(true); }}
-              >
-                Sign In
-              </button>
-            )}
+            <NavLink
+              to={isAuthenticated ? '/account' : '/login'}
+              className="mobile-drawer-link"
+              onClick={() => setMobileOpen(false)}
+            >
+              {isAuthenticated ? 'My Account' : 'Sign In'}
+            </NavLink>
           </div>
         </div>
       </div>
-
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
 };

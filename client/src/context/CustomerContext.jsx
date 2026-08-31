@@ -18,7 +18,10 @@ export const CustomerProvider = ({ children }) => {
   useEffect(() => {
     getCustomerProfile()
       .then((res) => setCustomer(res.data))
-      .catch(() => setCustomer(null))
+      .catch(() => {
+        setCustomer(null);
+        localStorage.removeItem('customerToken');
+      })
       .finally(() => setLoading(false));
   }, []);
 

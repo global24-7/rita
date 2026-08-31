@@ -65,14 +65,14 @@ const OrderConfirmation = () => {
 
           <div className="confirmation-actions">
             <a
-              href={whatsappLink || `https://wa.me/23359217747`}
+              href={whatsappLink || `https://wa.me/233592117747`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-whatsapp btn-lg btn-block"
             >
               <FaWhatsapp size={18} /> Confirm on WhatsApp
             </a>
-            <a href="tel:059217747" className="btn btn-outline btn-lg btn-block">
+            <a href="tel:0592117747" className="btn btn-outline btn-lg btn-block">
               <FiPhone size={18} /> Call to Confirm
             </a>
             <Link to="/catalog" className="btn btn-ghost btn-block">

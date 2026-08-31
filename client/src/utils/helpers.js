@@ -7,7 +7,7 @@ export const calculateDiscount = (price, discountPercent) => {
   return Math.round(price - (price * discountPercent / 100));
 };
 
-export const generateWhatsAppLink = (phone = '059217747', message = '') => {
+export const generateWhatsAppLink = (phone = '0592117747', message = '') => {
   const cleanPhone = phone.replace(/\D/g, '');
   const fullPhone = cleanPhone.startsWith('233') ? cleanPhone : `233${cleanPhone}`;
   return `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`;

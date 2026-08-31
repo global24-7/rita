@@ -233,7 +233,7 @@ const seedDB = async () => {
     await Settings.create({
       deliveryFee: 20,
       currency: 'GH₵',
-      businessPhone: '059217747',
+      businessPhone: '0592117747',
       businessName: 'Rita Jeans',
       locations: ['La Paz', 'Ablekuma'],
     });

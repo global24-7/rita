@@ -12,7 +12,7 @@ const settingsSchema = new mongoose.Schema({
   },
   businessPhone: {
     type: String,
-    default: '059217747',
+    default: '0592117747',
   },
   businessName: {
     type: String,

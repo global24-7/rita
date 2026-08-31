@@ -26,7 +26,7 @@ const Footer = () => {
           <div className="footer-col">
             <h4 className="footer-heading">Help</h4>
             <div className="footer-links">
-              <a href="tel:059217747"><FiPhone size={14} /> 059 217 7477</a>
+              <a href="tel:0592117747"><FiPhone size={14} /> 059 211 7747</a>
               <span><FiMapPin size={14} /> La Paz, Accra</span>
               <span><FiMapPin size={14} /> Ablekuma, Accra</span>
               <Link to="/catalog?flashSale=true">Flash Sales</Link>

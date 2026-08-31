@@ -145,7 +145,7 @@ const Checkout = () => {
                 className="form-input"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="e.g. 059217747"
+                placeholder="e.g. 0592117747"
               />
               {errors.phone && <span className="form-error">{errors.phone}</span>}
             </div>

@@ -25,6 +25,7 @@ import Wishlist from './pages/Wishlist';
 import Account from './pages/Account';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import AuthPage from './components/auth/AuthPage';
 
 // Admin Pages
 import Login from './pages/admin/Login';
@@ -150,6 +151,8 @@ function App() {
                   </>
                 }
               />
+              <Route path="/login" element={<AuthPage />} />
+              <Route path="/login/:mode" element={<AuthPage />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 

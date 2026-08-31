@@ -3,7 +3,7 @@ import { FiPhone } from 'react-icons/fi';
 import { generateWhatsAppLink } from '../../utils/helpers';
 
 const FloatingButtons = () => {
-  const whatsappLink = generateWhatsAppLink('059217747', "Hi Rita! I'd like to place an order.");
+  const whatsappLink = generateWhatsAppLink('0592117747', "Hi Rita! I'd like to place an order.");
 
   return (
     <div className="floating-buttons" id="floating-buttons">
@@ -18,7 +18,7 @@ const FloatingButtons = () => {
         <FaWhatsapp size={20} />
       </a>
       <a
-        href="tel:059217747"
+        href="tel:0592117747"
         className="floating-btn floating-btn-call"
         aria-label="Call to order"
         title="Call to order"

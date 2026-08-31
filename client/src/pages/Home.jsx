@@ -160,11 +160,11 @@ const Home = () => {
                 </div>
               </div>
               <div className="cta-actions">
-                <a href="tel:059217747" className="btn btn-primary">
+                <a href="tel:0592117747" className="btn btn-primary">
                   <FiPhone size={16} /> Call Now
                 </a>
                 <a
-                  href="https://wa.me/23359217747?text=Hi%20Rita!%20I'd%20like%20to%20place%20an%20order."
+                  href="https://wa.me/233592117747?text=Hi%20Rita!%20I'd%20like%20to%20place%20an%20order."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-outline"
