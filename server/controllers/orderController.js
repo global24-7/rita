@@ -50,7 +50,7 @@ exports.createOrder = async (req, res, next) => {
       `Order ID: ${order._id}`
     );
 
-    const whatsappLink = `https://wa.me/233${order.phone || '592117747'}?text=${whatsappMessage}`;
+    const whatsappLink = `https://wa.me/233592117747?text=${whatsappMessage}`;
 
     res.status(201).json({
       order,
