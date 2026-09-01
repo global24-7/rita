@@ -99,6 +99,22 @@ exports.createOrder = async (req, res, next) => {
 
     const whatsappLink = `https://wa.me/233592117747?text=${whatsappMessage}`;
 
+    // Process referral reward if this is the customer's first order
+    if (order.customer_id) {
+      try {
+        await fetch(`${process.env.SUPABASE_URL ? 'http://localhost:' + (process.env.PORT || 5000) : 'http://localhost:5000'}/api/referrals/process-purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerId: order.customer_id,
+            orderId: order.id,
+          }),
+        });
+      } catch (e) {
+        console.error('Referral reward error:', e.message);
+      }
+    }
+
     // Transform order for response
     const transformedOrder = {
       _id: order.id,

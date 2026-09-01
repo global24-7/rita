@@ -5,6 +5,7 @@ import { useCustomer } from '../context/CustomerContext';
 import { getMyOrders } from '../api';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import ReferralDashboard from '../components/referral/ReferralDashboard';
 
 const Account = () => {
   const { customer, loading, updateProfile, logout, isAuthenticated } = useCustomer();
@@ -207,6 +208,11 @@ const Account = () => {
               </div>
             )}
           </section>
+        </div>
+
+        {/* Referral Section */}
+        <div className="account-section" style={{ marginTop: '2rem' }}>
+          <ReferralDashboard customer={customer} />
         </div>
       </div>
     </div>

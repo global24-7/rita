@@ -34,6 +34,8 @@ import ProductManager from './pages/admin/ProductManager';
 import ProductForm from './pages/admin/ProductForm';
 import OrderManager from './pages/admin/OrderManager';
 import ReviewManager from './pages/admin/ReviewManager';
+import AdminReferrals from './pages/admin/Referrals';
+import PWAInstall from './components/common/PWAInstall';
 
 // Styles
 import './index.css';
@@ -61,6 +63,7 @@ function App() {
                 },
               }}
             />
+            <PWAInstall />
             <Routes>
               {/* Customer Routes */}
               <Route
@@ -172,6 +175,7 @@ function App() {
                 <Route path="products/edit/:id" element={<ProductForm />} />
                 <Route path="orders" element={<OrderManager />} />
                 <Route path="reviews" element={<ReviewManager />} />
+                <Route path="referrals" element={<AdminReferrals />} />
               </Route>
             </Routes>
           </Router>

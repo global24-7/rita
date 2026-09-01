@@ -4,7 +4,7 @@ import { FiMapPin, FiPhone, FiArrowRight } from 'react-icons/fi';
 import { getProducts } from '../api';
 import ProductCard from '../components/product/ProductCard';
 import FlashSaleTimer from '../components/product/FlashSaleTimer';
-import { setReferralFromUrl } from '../utils/helpers';
+import ReferralTracker from '../components/referral/ReferralTracker';
 
 const categories = [
   { name: 'Skinny', desc: 'Slim & sleek' },
@@ -21,7 +21,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setReferralFromUrl();
     fetchProducts();
   }, []);
 
@@ -49,6 +48,7 @@ const Home = () => {
 
   return (
     <div className="home-page" id="home-page">
+      <ReferralTracker />
       {/* Hero */}
       <section className="hero">
         <div className="hero-inner">

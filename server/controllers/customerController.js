@@ -87,6 +87,26 @@ exports.registerCustomer = async (req, res, next) => {
 
     if (error) throw error;
 
+    // Process referral if referredBy code was provided
+    if (referredBy && customer) {
+      try {
+        await fetch(`${process.env.SUPABASE_URL ? 'http://localhost:' + (process.env.PORT || 5000) : 'http://localhost:5000'}/api/referrals/process-signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            referralCode: referredBy,
+            customerId: customer.id,
+            customerName: customer.name,
+            customerEmail: customer.email,
+            customerPhone: customer.phone,
+          }),
+        });
+      } catch (e) {
+        // Don't fail registration if referral processing fails
+        console.error('Referral processing error:', e.message);
+      }
+    }
+
     sendTokenResponse(customer, 201, res);
   } catch (error) {
     next(error);

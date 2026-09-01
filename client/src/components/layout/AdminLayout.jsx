@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiGrid, FiPackage, FiShoppingCart, FiMessageSquare, FiLogOut, FiMenu, FiX, FiArrowLeft } from 'react-icons/fi';
+import { FiGrid, FiPackage, FiShoppingCart, FiMessageSquare, FiLogOut, FiMenu, FiX, FiArrowLeft, FiUsers } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
@@ -18,6 +18,7 @@ const AdminLayout = () => {
     { to: '/admin/products', icon: <FiPackage />, label: 'Products' },
     { to: '/admin/orders', icon: <FiShoppingCart />, label: 'Orders' },
     { to: '/admin/reviews', icon: <FiMessageSquare />, label: 'Reviews' },
+    { to: '/admin/referrals', icon: <FiUsers />, label: 'Referrals' },
   ];
 
   return (

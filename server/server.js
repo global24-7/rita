@@ -15,6 +15,7 @@ const orderRoutes = require('./routes/orders');
 const customerRoutes = require('./routes/customers');
 const adminRoutes = require('./routes/admin');
 const settingsRoutes = require('./routes/settings');
+const referralRoutes = require('./routes/referrals');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/referrals', referralRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

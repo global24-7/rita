@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiArrowRight, FiShoppingBag } from 'react-icons/fi';
+import { FiArrowRight, FiShoppingBag, FiTag, FiCheck } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
-import { createOrder, getSettings } from '../api';
+import { createOrder, getSettings, applyVoucher } from '../api';
 import { formatPrice, getReferralCode } from '../utils/helpers';
 
 const Checkout = () => {
@@ -18,6 +18,10 @@ const Checkout = () => {
     deliveryAddress: '',
   });
   const [errors, setErrors] = useState({});
+  const [voucherCode, setVoucherCode] = useState('');
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [voucherDiscount, setVoucherDiscount] = useState(0);
 
   useEffect(() => {
     fetchSettings();
@@ -33,7 +37,7 @@ const Checkout = () => {
   };
 
   const currentDeliveryFee = form.deliveryLocation === 'Ablekuma' ? 0 : deliveryFee;
-  const total = cartTotal + currentDeliveryFee;
+  const total = cartTotal + currentDeliveryFee - voucherDiscount;
 
   const validate = () => {
     const errs = {};
@@ -53,6 +57,33 @@ const Checkout = () => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleApplyVoucher = async () => {
+    if (!voucherCode.trim()) {
+      toast.error('Enter a voucher code');
+      return;
+    }
+    setVoucherLoading(true);
+    try {
+      const res = await applyVoucher({ code: voucherCode.trim() });
+      const { discount, type, value } = res.data;
+      setAppliedVoucher(res.data);
+      setVoucherDiscount(discount);
+      toast.success(`Voucher applied! ${type === 'percentage' ? `${value}% off` : `${formatPrice(discount)} off`}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Invalid voucher code');
+      setAppliedVoucher(null);
+      setVoucherDiscount(0);
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherDiscount(0);
+    setVoucherCode('');
   };
 
   const handleSubmit = async (e) => {
@@ -79,6 +110,7 @@ const Checkout = () => {
           priceAtOrder: item.price,
         })),
         referralCode: getReferralCode(),
+        voucherCode: appliedVoucher ? appliedVoucher.code : null,
       };
 
       const res = await createOrder(orderData);
@@ -186,6 +218,62 @@ const Checkout = () => {
               ></textarea>
             </div>
 
+            {/* Voucher Input */}
+            <div className="form-group">
+              <label className="form-label">
+                <FiTag size={14} /> Referral Voucher
+              </label>
+              {appliedVoucher ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(226,176,74,0.08)',
+                  border: '1px solid var(--color-primary)',
+                  borderRadius: 'var(--radius-sm)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}>
+                    <FiCheck size={16} /> <strong>{appliedVoucher.code}</strong>
+                    <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>
+                      (-{formatPrice(voucherDiscount)})
+                    </span>
+                  </div>
+                  <button type="button" onClick={handleRemoveVoucher} style={{
+                    background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '0.85rem',
+                  }}>Remove</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    placeholder="Enter referral code"
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyVoucher}
+                    disabled={voucherLoading}
+                    style={{
+                      padding: '0 1rem',
+                      background: 'var(--color-bg-alt)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      cursor: voucherLoading ? 'wait' : 'pointer',
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      color: 'var(--color-text)',
+                    }}
+                  >
+                    {voucherLoading ? '...' : 'Apply'}
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary btn-lg btn-block"
@@ -220,6 +308,12 @@ const Checkout = () => {
                 {currentDeliveryFee === 0 ? 'FREE' : formatPrice(currentDeliveryFee)}
               </span>
             </div>
+            {voucherDiscount > 0 && (
+              <div className="cart-summary-row" style={{ color: 'var(--color-primary)' }}>
+                <span>Voucher Discount</span>
+                <span>-{formatPrice(voucherDiscount)}</span>
+              </div>
+            )}
             <div className="cart-summary-divider" />
             <div className="cart-summary-row cart-summary-total">
               <span>Total</span>

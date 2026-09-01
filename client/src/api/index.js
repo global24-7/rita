@@ -81,4 +81,10 @@ export const changePassword = (data) => api.put('/admin/password', data);
 export const getSettings = () => api.get('/settings');
 export const updateSettings = (data) => api.put('/settings', data);
 
+// === Referrals ===
+export const getReferralDashboard = () => api.get('/referrals/dashboard');
+export const trackReferral = (data) => api.post('/referrals/track', data);
+export const applyVoucher = (data) => api.post('/referrals/apply-voucher', data);
+export const getReferralAnalytics = () => api.get('/referrals/admin/analytics');
+
 export default api;

@@ -1,0 +1,41 @@
+{
+  "name": "Rita Jeans - Premium Denim in Accra",
+  "short_name": "Rita Jeans",
+  "description": "Shop premium skinny, straight, ripped, mom fit, baggy, and wide leg jeans in La Paz and Ablekuma, Accra.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E8E4DE",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["shopping", "fashion"],
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
