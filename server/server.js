@@ -6,7 +6,6 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
 // Route imports
@@ -18,9 +17,6 @@ const adminRoutes = require('./routes/admin');
 const settingsRoutes = require('./routes/settings');
 
 const app = express();
-
-// Connect to MongoDB
-connectDB();
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -46,7 +42,7 @@ app.use('/api/settings', settingsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), database: 'supabase' });
 });
 
 // Error handler (must be last)
@@ -54,7 +50,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Rita Jeans API running on port ${PORT}`);
+  console.log(`Rita Jeans API running on port ${PORT} (Supabase)`);
 });
 
 module.exports = app;

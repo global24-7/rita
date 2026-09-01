@@ -1,13 +1,19 @@
+const supabase = require('../config/supabase');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const Customer = require('../models/Customer');
+const bcrypt = require('bcryptjs');
+
+const generateReferralCode = () => {
+  const hex = crypto.randomBytes(4).toString('hex').toUpperCase();
+  return `RITA-${hex}`;
+};
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 const sendTokenResponse = (customer, statusCode, res) => {
-  const token = generateToken(customer._id);
+  const token = generateToken(customer.id);
 
   const cookieOptions = {
     httpOnly: true,
@@ -20,11 +26,11 @@ const sendTokenResponse = (customer, statusCode, res) => {
     .status(statusCode)
     .cookie('customerToken', token, cookieOptions)
     .json({
-      _id: customer._id,
+      _id: customer.id,
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
-      referralCode: customer.referralCode,
+      referralCode: customer.referral_code,
       token,
     });
 };
@@ -39,25 +45,47 @@ exports.registerCustomer = async (req, res, next) => {
       return res.status(400).json({ message: 'Name, phone, and password are required' });
     }
 
-    const existingPhone = await Customer.findOne({ phone });
+    // Check phone uniqueness
+    const { data: existingPhone } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('phone', phone)
+      .single();
+
     if (existingPhone) {
       return res.status(400).json({ message: 'Phone number already registered' });
     }
 
+    // Check email uniqueness if provided
     if (email) {
-      const existingEmail = await Customer.findOne({ email });
+      const { data: existingEmail } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', email)
+        .single();
+
       if (existingEmail) {
         return res.status(400).json({ message: 'Email already registered' });
       }
     }
 
-    const customer = await Customer.create({
-      name,
-      email: email || undefined,
-      phone,
-      password,
-      referredBy: referredBy || null,
-    });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const referralCode = generateReferralCode();
+
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .insert({
+        name,
+        email: email || null,
+        phone,
+        password: hashedPassword,
+        referral_code: referralCode,
+        referred_by: referredBy || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     sendTokenResponse(customer, 201, res);
   } catch (error) {
@@ -75,12 +103,21 @@ exports.loginCustomer = async (req, res, next) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const customer = await Customer.findOne({ email }).select('+password');
-    if (!customer) {
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !customer) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const isMatch = await customer.isPasswordCorrect(password);
+    if (!customer.password) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -95,8 +132,33 @@ exports.loginCustomer = async (req, res, next) => {
 // @route   GET /api/customers/me
 exports.getMe = async (req, res, next) => {
   try {
-    const customer = await Customer.findById(req.customer._id).populate('wishlist');
-    res.json(customer);
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('id, name, email, phone, referral_code, created_at')
+      .eq('id', req.customer.id)
+      .single();
+
+    if (error || !customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    // Get wishlist
+    const { data: wishlistData } = await supabase
+      .from('customer_wishlists')
+      .select('product_id')
+      .eq('customer_id', customer.id);
+
+    let wishlist = [];
+    if (wishlistData && wishlistData.length > 0) {
+      const productIds = wishlistData.map(w => w.product_id);
+      const { data: products } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', productIds);
+      wishlist = products || [];
+    }
+
+    res.json({ ...customer, wishlist });
   } catch (error) {
     next(error);
   }
@@ -107,36 +169,55 @@ exports.getMe = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
-    const customer = await Customer.findById(req.customer._id);
 
-    if (name) customer.name = name;
+    // Check email uniqueness if changing
     if (email) {
-      if (email !== customer.email) {
-        const existing = await Customer.findOne({ email });
-        if (existing) {
-          return res.status(400).json({ message: 'Email already in use' });
-        }
+      const { data: existing } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', email)
+        .neq('id', req.customer.id)
+        .single();
+
+      if (existing) {
+        return res.status(400).json({ message: 'Email already in use' });
       }
-      customer.email = email;
-    }
-    if (phone) {
-      if (phone !== customer.phone) {
-        const existing = await Customer.findOne({ phone });
-        if (existing) {
-          return res.status(400).json({ message: 'Phone number already in use' });
-        }
-      }
-      customer.phone = phone;
     }
 
-    await customer.save();
+    // Check phone uniqueness if changing
+    if (phone) {
+      const { data: existing } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('phone', phone)
+        .neq('id', req.customer.id)
+        .single();
+
+      if (existing) {
+        return res.status(400).json({ message: 'Phone number already in use' });
+      }
+    }
+
+    const updates = {};
+    if (name) updates.name = name;
+    if (email) updates.email = email;
+    if (phone) updates.phone = phone;
+
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .update(updates)
+      .eq('id', req.customer.id)
+      .select('id, name, email, phone, referral_code')
+      .single();
+
+    if (error) throw error;
 
     res.json({
-      _id: customer._id,
+      _id: customer.id,
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
-      referralCode: customer.referralCode,
+      referralCode: customer.referral_code,
     });
   } catch (error) {
     next(error);
@@ -153,19 +234,29 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    const customer = await Customer.findOne({ email });
-    if (!customer) {
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (error || !customer) {
       return res.status(404).json({ message: 'No account with that email' });
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    customer.resetPasswordToken = hashedToken;
-    customer.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
-    await customer.save({ validateBeforeSave: false });
+    const { error: updateError } = await supabase
+      .from('customers')
+      .update({
+        reset_password_token: hashedToken,
+        reset_password_expire: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      })
+      .eq('id', customer.id);
 
-    // In production, send email here. For now, return the raw token.
+    if (updateError) throw updateError;
+
     res.json({
       message: 'Password reset token generated',
       resetToken,
@@ -187,19 +278,29 @@ exports.resetPassword = async (req, res, next) => {
 
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const customer = await Customer.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() },
-    }).select('+resetPasswordToken +resetPasswordExpire');
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('reset_password_token', hashedToken)
+      .gt('reset_password_expire', new Date().toISOString())
+      .single();
 
-    if (!customer) {
+    if (error || !customer) {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
-    customer.password = password;
-    customer.resetPasswordToken = undefined;
-    customer.resetPasswordExpire = undefined;
-    await customer.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { error: updateError } = await supabase
+      .from('customers')
+      .update({
+        password: hashedPassword,
+        reset_password_token: null,
+        reset_password_expire: null,
+      })
+      .eq('id', customer.id);
+
+    if (updateError) throw updateError;
 
     sendTokenResponse(customer, 200, res);
   } catch (error) {
@@ -231,16 +332,30 @@ exports.createCustomer = async (req, res, next) => {
     const { name, phone, referredBy } = req.body;
 
     // Check if phone already exists
-    let customer = await Customer.findOne({ phone });
-    if (customer) {
-      return res.json(customer);
+    const { data: existing } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('phone', phone)
+      .single();
+
+    if (existing) {
+      return res.json(existing);
     }
 
-    customer = await Customer.create({
-      name,
-      phone,
-      referredBy: referredBy || null,
-    });
+    const referralCode = generateReferralCode();
+
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .insert({
+        name,
+        phone,
+        referral_code: referralCode,
+        referred_by: referredBy || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     res.status(201).json(customer);
   } catch (error) {
@@ -252,12 +367,33 @@ exports.createCustomer = async (req, res, next) => {
 // @route   GET /api/customers/phone/:phone
 exports.getCustomerByPhone = async (req, res, next) => {
   try {
-    const customer = await Customer.findOne({ phone: req.params.phone })
-      .populate('wishlist');
-    if (!customer) {
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('id, name, email, phone, referral_code, created_at')
+      .eq('phone', req.params.phone)
+      .single();
+
+    if (error || !customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
-    res.json(customer);
+
+    // Get wishlist
+    const { data: wishlistData } = await supabase
+      .from('customer_wishlists')
+      .select('product_id')
+      .eq('customer_id', customer.id);
+
+    let wishlist = [];
+    if (wishlistData && wishlistData.length > 0) {
+      const productIds = wishlistData.map(w => w.product_id);
+      const { data: products } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', productIds);
+      wishlist = products || [];
+    }
+
+    res.json({ ...customer, wishlist });
   } catch (error) {
     next(error);
   }
@@ -267,12 +403,22 @@ exports.getCustomerByPhone = async (req, res, next) => {
 // @route   GET /api/customers/:id/wishlist
 exports.getWishlist = async (req, res, next) => {
   try {
-    const customer = await Customer.findById(req.params.id)
-      .populate('wishlist');
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
+    const { data: wishlistData } = await supabase
+      .from('customer_wishlists')
+      .select('product_id')
+      .eq('customer_id', req.params.id);
+
+    if (!wishlistData || wishlistData.length === 0) {
+      return res.json([]);
     }
-    res.json(customer.wishlist);
+
+    const productIds = wishlistData.map(w => w.product_id);
+    const { data: products } = await supabase
+      .from('products')
+      .select('*')
+      .in('id', productIds);
+
+    res.json(products || []);
   } catch (error) {
     next(error);
   }
@@ -283,25 +429,37 @@ exports.getWishlist = async (req, res, next) => {
 exports.updateWishlist = async (req, res, next) => {
   try {
     const { productId, action } = req.body; // action: 'add' or 'remove'
-    const customer = await Customer.findById(req.params.id);
-
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
 
     if (action === 'add') {
-      if (!customer.wishlist.includes(productId)) {
-        customer.wishlist.push(productId);
-      }
+      await supabase
+        .from('customer_wishlists')
+        .insert({ customer_id: req.params.id, product_id: productId })
+        .select();
     } else if (action === 'remove') {
-      customer.wishlist = customer.wishlist.filter(
-        (id) => id.toString() !== productId
-      );
+      await supabase
+        .from('customer_wishlists')
+        .delete()
+        .eq('customer_id', req.params.id)
+        .eq('product_id', productId);
     }
 
-    await customer.save();
-    const populated = await Customer.findById(customer._id).populate('wishlist');
-    res.json(populated.wishlist);
+    // Return updated wishlist
+    const { data: wishlistData } = await supabase
+      .from('customer_wishlists')
+      .select('product_id')
+      .eq('customer_id', req.params.id);
+
+    if (!wishlistData || wishlistData.length === 0) {
+      return res.json([]);
+    }
+
+    const productIds = wishlistData.map(w => w.product_id);
+    const { data: products } = await supabase
+      .from('products')
+      .select('*')
+      .in('id', productIds);
+
+    res.json(products || []);
   } catch (error) {
     next(error);
   }

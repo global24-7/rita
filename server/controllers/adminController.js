@@ -1,5 +1,6 @@
-const Admin = require('../models/Admin');
+const supabase = require('../config/supabase');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 // @desc    Admin login
 // @route   POST /api/admin/login
@@ -11,18 +12,23 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
+    const { data: admin, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !admin) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
-    const isMatch = await admin.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
     const token = jwt.sign(
-      { id: admin._id, email: admin.email, role: admin.role },
+      { id: admin.id, email: admin.email, role: admin.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -30,7 +36,7 @@ exports.login = async (req, res, next) => {
     res.json({
       token,
       admin: {
-        id: admin._id,
+        id: admin.id,
         email: admin.email,
         role: admin.role,
       },
@@ -44,7 +50,16 @@ exports.login = async (req, res, next) => {
 // @route   GET /api/admin/me
 exports.getMe = async (req, res, next) => {
   try {
-    const admin = await Admin.findById(req.admin.id).select('-password');
+    const { data: admin, error } = await supabase
+      .from('admins')
+      .select('id, email, role, created_at')
+      .eq('id', req.admin.id)
+      .single();
+
+    if (error || !admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
     res.json(admin);
   } catch (error) {
     next(error);
@@ -56,15 +71,30 @@ exports.getMe = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const admin = await Admin.findById(req.admin.id);
 
-    const isMatch = await admin.comparePassword(currentPassword);
+    const { data: admin, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('id', req.admin.id)
+      .single();
+
+    if (error || !admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, admin.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Current password is incorrect.' });
     }
 
-    admin.password = newPassword;
-    await admin.save();
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    const { error: updateError } = await supabase
+      .from('admins')
+      .update({ password: hashedPassword })
+      .eq('id', admin.id);
+
+    if (updateError) throw updateError;
 
     res.json({ message: 'Password updated successfully.' });
   } catch (error) {

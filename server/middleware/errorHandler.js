@@ -6,21 +6,20 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
   }
 
-  // Mongoose validation errors
-  if (err.name === 'ValidationError') {
-    const messages = Object.values(err.errors).map((e) => e.message);
-    return res.status(400).json({ message: messages.join(', ') });
+  // Supabase errors (PostgREST)
+  if (err.code === '23505') {
+    // Unique violation
+    return res.status(400).json({ message: 'Duplicate value. This record already exists.' });
   }
 
-  // Mongoose duplicate key
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    return res.status(400).json({ message: `Duplicate value for ${field}.` });
+  if (err.code === '23503') {
+    // Foreign key violation
+    return res.status(400).json({ message: 'Referenced record not found.' });
   }
 
-  // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    return res.status(400).json({ message: 'Invalid ID format.' });
+  if (err.code === '23514') {
+    // Check constraint violation
+    return res.status(400).json({ message: 'Invalid value for a field constraint.' });
   }
 
   // JWT errors

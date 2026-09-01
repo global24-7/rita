@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const Customer = require('../models/Customer');
+const supabase = require('../config/supabase');
 
 const customerAuth = async (req, res, next) => {
   try {
@@ -20,8 +20,13 @@ const customerAuth = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const customer = await Customer.findById(decoded.id);
-    if (!customer) {
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('id, name, email, phone, referral_code, created_at')
+      .eq('id', decoded.id)
+      .single();
+
+    if (error || !customer) {
       return res.status(401).json({ message: 'Not authorized, customer not found' });
     }
 
@@ -47,7 +52,12 @@ const optionalAuth = async (req, res, next) => {
 
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const customer = await Customer.findById(decoded.id);
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id, name, email, phone, referral_code, created_at')
+        .eq('id', decoded.id)
+        .single();
+
       if (customer) {
         req.customer = customer;
       }
