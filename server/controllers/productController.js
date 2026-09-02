@@ -1,6 +1,26 @@
 const supabase = require('../config/supabase');
-const fs = require('fs');
-const path = require('path');
+
+const BUCKET = 'product-images';
+
+async function uploadImage(file) {
+  const ext = file.originalname.split('.').pop();
+  const fileName = `product-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(fileName, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
+
+  if (error) throw error;
+
+  const { data: urlData } = supabase.storage
+    .from(BUCKET)
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+}
 
 // @desc    Get all products (with filtering, search, pagination)
 // @route   GET /api/products
@@ -183,7 +203,8 @@ exports.createProduct = async (req, res, next) => {
     // Handle uploaded images
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map((file) => `/uploads/${file.filename}`);
+      const uploadPromises = req.files.map((file) => uploadImage(file));
+      images = await Promise.all(uploadPromises);
     }
 
     const { data: product, error } = await supabase
@@ -266,7 +287,8 @@ exports.updateProduct = async (req, res, next) => {
     // Handle images
     let images = existing.images || [];
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map((file) => `/uploads/${file.filename}`);
+      const uploadPromises = req.files.map((file) => uploadImage(file));
+      const newImages = await Promise.all(uploadPromises);
       if (updateData.existingImages) {
         const existingImages = typeof updateData.existingImages === 'string'
           ? JSON.parse(updateData.existingImages)
@@ -346,14 +368,13 @@ exports.deleteProduct = async (req, res, next) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Delete associated image files
+    // Delete associated images from Supabase Storage
     if (product.images && product.images.length > 0) {
-      product.images.forEach((imgPath) => {
-        const fullPath = path.join(__dirname, '..', imgPath);
-        if (fs.existsSync(fullPath)) {
-          fs.unlinkSync(fullPath);
-        }
+      const fileNames = product.images.map((url) => {
+        const parts = url.split('/');
+        return parts[parts.length - 1];
       });
+      await supabase.storage.from(BUCKET).remove(fileNames);
     }
 
     const { error } = await supabase
