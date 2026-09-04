@@ -18,7 +18,13 @@ exports.login = async (req, res, next) => {
       .eq('email', email)
       .single();
 
-    if (error || !admin) {
+    if (error) {
+      console.error('Admin query error:', error.message, error.code);
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    if (!admin) {
+      console.error('No admin found for email:', email);
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
