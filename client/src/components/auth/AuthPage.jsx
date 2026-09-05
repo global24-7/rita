@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiPhone } from 'react-icons/fi';
 import { useCustomer } from '../../context/CustomerContext';
 import toast from 'react-hot-toast';
 
@@ -17,6 +17,7 @@ const AuthPage = () => {
   const [signUpForm, setSignUpForm] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -63,6 +64,7 @@ const AuthPage = () => {
       await register({
         name: signUpForm.name,
         email: signUpForm.email,
+        phone: signUpForm.phone,
         password: signUpForm.password,
       });
       toast.success('Account created!');
@@ -176,6 +178,18 @@ const AuthPage = () => {
                   required
                 />
                 <label htmlFor="signup-email">Email Address</label>
+              </div>
+
+              <div className="floating-input">
+                <FiPhone className="floating-input-icon" />
+                <input
+                  type="tel"
+                  id="signup-phone"
+                  value={signUpForm.phone}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, phone: e.target.value })}
+                  required
+                />
+                <label htmlFor="signup-phone">Phone Number</label>
               </div>
 
               <div className="floating-input">
